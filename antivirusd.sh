@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 
 
@@ -7,14 +7,67 @@ then
  echo "needs 3 arguments, directory malDir and timeBetweenScans"
  exit 1
 else
-  dir = $1
-  malDir = $2
-  timeBetweenScans = $3
+  dir=$1
+  malDir=$2
+  timeBetweenScans=$3
 fi
 
-if [ ! -f "$~/directory-info.last" ]
+
+last=$(find . -name "directory-info.last")
+new=$(find . -name "directory-info.new")
+
+if [ "$last"  == "" ]
 then
-    touch ~/directory-info.last
-else
- 
+ touch directory-info.last
+ last="directory-info.last"
 fi
+
+if [ "$new"  == "" ]
+then
+ touch directory-info.new
+ new="directory-info.new"
+fi
+
+last="directory-info.last"
+new="directory-info.new"
+
+virusExtensions=$(find $dir \( -name "*.exe" -o -name "*.bat" -o -name "*.vbs" -o -name "*.scr" -o -name  "*.ps1" \))
+virusWord=$(grep -ril -e "virus" -e "trojan" -e  "malware" -e "worm" -e "ransomware" $dir)
+all=$(printf '%s\n%s\n' "$virusExtensions" "$virusWord" | sort -u)
+
+if [ -n "$all" ]
+then
+ for file in $all
+   do
+    echo "<$file> is malicious and it is DELETED"
+   done
+ mv $all $malDir
+fi
+
+
+ls -l $dir > $last
+while true
+do
+ sleep $timeBetweenScans
+ ls -l $dir > $new
+ if cmp -s "$last" "$new"
+ then
+  echo "No changes found, directory clean"
+ else
+  echo "Changes found, scanning"
+  virusExtensions=$(find $dir \( -name "*.exe" -o -name "*.bat" -o -name "*.vbs" -o -name "*.scr" -o -name  "*.ps1" \))
+  virusWord=$(grep -ril -e "virus" -e "trojan" -e  "malware" -e "worm" -e "ransomware" $dir)
+  all=$(printf '%s\n%s\n' "$virusExtensions" "$virusWord" | sort -u)
+
+ if [ -n "$all" ]
+   then
+   for file in $all
+   do
+    echo "<$file> is malicious and it is DELETED"
+   done
+   mv $all $malDir
+ fi
+ ls -l $dir > $last
+fi
+done
+
