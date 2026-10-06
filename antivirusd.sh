@@ -20,9 +20,12 @@ if [ -n "$all" ]
 then
  for file in $all
    do
+    if grep -q $file whitelist.txt; then
+      continue
+    fi
     echo "<$file> is malicious and it is DELETED"
+    mv $file $malDir
    done
- mv $all $malDir
 fi
 }
 
@@ -53,10 +56,8 @@ while true
 do
  sleep $timeBetweenScans
  ls -l $dir > $new
- if cmp -s "$last" "$new"
+ if ! cmp -s "$last" "$new"
  then
-  echo "No changes found, directory clean"
- else
   echo "Changes found, scanning"
   scan
   ls -l $dir > $last
