@@ -22,10 +22,19 @@ fi
 option=0
 while true
 do
-ls $malicious_dir
+
+files=$(ls $malicious_dir)
+
+index=1
+for file in $files
+do
+echo "$index. $file"
+index=$((index + 1))
+done
 read -rp "Please select which file to interact with from above (1 to $count): " fileNumber
 fileName=$(ls $malicious_dir | head -n $fileNumber  | tail -n 1)
 
+echo "<$fileName>"
 read -rp $'Please choose one of the following options:\n1. Restore\n2. Delete:\n3. Leave\n ' option
 if [ $option -eq 1 ]
 then
