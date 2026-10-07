@@ -1,3 +1,4 @@
 
 dir/e.exe
 dir/k.txt
+dir/testt.exe
