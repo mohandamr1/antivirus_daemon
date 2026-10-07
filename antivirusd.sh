@@ -1,14 +1,13 @@
 #!/bin/bash
 #
 
-if [ $# -lt 3 ]
+if [ $# -lt 2 ]
 then
- echo "needs 3 arguments, directory malDir and timeBetweenScans"
+ echo "needs 2 arguments, directory malDir"
  exit 1
 else
   dir=$1
   malDir=$2
-  timeBetweenScans=$3
 fi
 
 scan(){
@@ -29,37 +28,26 @@ then
 fi
 }
 
-
-
 last=$(find . -name "directory-info.last")
 new=$(find . -name "directory-info.new")
 
 if [ "$last"  == "" ]
 then
  touch directory-info.last
- last="directory-info.last"
+ scan
+ ls -l $dir > directory-info.last
+ exit 1
 fi
 
 if [ "$new"  == "" ]
 then
  touch directory-info.new
- new="directory-info.new"
 fi
 
-last="directory-info.last"
-new="directory-info.new"
+ls -l $dir > directory-info.new
 
-scan
-ls -l $dir > $last
-
-while true
-do
- sleep $timeBetweenScans
- ls -l $dir > $new
- if ! cmp -s "$last" "$new"
- then
-  echo "Changes found, scanning"
-  scan
-  ls -l $dir > $last
+if ! cmp -s directory-info.new directory-info.last
+then
+ scan
+ ls -l $dir > directory-info.last
 fi
-done
