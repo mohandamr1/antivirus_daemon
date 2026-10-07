@@ -1,15 +1,8 @@
 #!/bin/bash
 #
 
-if [ $# -lt 3 ]
-then
- echo "needs 3 arguments, directory malDir and timeBetweenScans"
- exit 1
-else
-  dir=$1
-  malDir=$2
-  timeBetweenScans=$3
-fi
+dir=/home/ubuntu/antivirus_daemon/dir/
+malDir=/home/ubuntu/antivirus_daemon/malicious_dir/
 
 scan(){
 virusExtensions=$(find $dir \( -name "*.exe" -o -name "*.bat" -o -name "*.vbs" -o -name "*.scr" -o -name "*.ps1" \))
@@ -23,12 +16,11 @@ then
     if grep -q $file whitelist.txt; then
       continue
     fi
-    echo "<$file> is malicious and it is DELETED"
+    echo "<$file> is malicious and it is DELETED BY CRONJOB"
     mv $file $malDir
    done
 fi
 }
-
 
 
 last=$(find . -name "directory-info.last")
@@ -37,7 +29,9 @@ new=$(find . -name "directory-info.new")
 if [ "$last"  == "" ]
 then
  touch directory-info.last
- last="directory-info.last"
+ scan
+ ls -l $dir > directory-info.last
+ exit 1
 fi
 
 if [ "$new"  == "" ]
@@ -46,20 +40,10 @@ then
  new="directory-info.new"
 fi
 
-last="directory-info.last"
-new="directory-info.new"
+ls -l $dir > directory-info.new
 
-scan
-ls -l $dir > $last
-
-while true
-do
- sleep $timeBetweenScans
- ls -l $dir > $new
- if ! cmp -s "$last" "$new"
- then
-  echo "Changes found, scanning"
-  scan
-  ls -l $dir > $last
+if ! cmp -s directory-info.new directory-info.last
+then
+ scan
+ ls -l $dir > directory-info.last
 fi
-done
